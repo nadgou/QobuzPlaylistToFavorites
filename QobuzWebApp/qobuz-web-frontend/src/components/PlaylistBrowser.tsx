@@ -71,7 +71,7 @@ export default function PlaylistBrowser({ selectedFeature, onStartImport, onStar
     setFavoritesLoading(true);
     try {
       const favorites = await favoritesService.getCurrentFavorites();
-      setCurrentFavorites(favorites);
+      setCurrentFavorites(favorites.tracks);
     } catch (error) {
       setCurrentFavorites(null);
     } finally {
