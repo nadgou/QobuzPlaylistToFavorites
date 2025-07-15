@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  qobuz-app:
+    build: .
+    ports:
+      - "5152:5152"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5152
