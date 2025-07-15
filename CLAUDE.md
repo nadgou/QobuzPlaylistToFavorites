@@ -126,26 +126,59 @@ cd QobuzWebApp/qobuz-web-frontend && npm run build
 3. Access web app at http://localhost:5173
 4. API available at http://localhost:5152
 
+## Deployment
+
+### 🚀 Live Application
+The web application is deployed on Railway and accessible at:
+**https://qobuzplaylisttofavorites-production.up.railway.app**
+
+### Railway Deployment
+- **Platform**: Railway (https://railway.app)
+- **Build**: Docker-based using multi-stage build
+- **Auto-deployment**: Triggers on GitHub push to main branch
+- **HTTPS**: Automatically provided by Railway
+- **Environment**: Production-optimized with proper CORS and API configurations
+
+### Deployment Setup
+1. **GitHub Repository**: https://github.com/nadgou/QobuzPlaylistToFavorites
+2. **Railway Project**: Connected to GitHub repo for automatic deployments
+3. **Configuration Files**:
+   - `Dockerfile`: Multi-stage build (frontend + backend)
+   - `railway.json`: Railway deployment configuration
+   - Production API URLs automatically configured
+
+### Manual Deployment
+If you need to deploy elsewhere:
+```bash
+# Build Docker image
+docker build -t qobuz-app .
+
+# Run locally
+docker run -p 5152:5152 qobuz-app
+
+# Or use docker-compose
+docker-compose up
+```
+
 ## Current Status & Known Issues
 
 ### ✅ Completed
 - Full web application with modern UI
 - All console app functionality preserved
-- Real-time progress tracking (with fallback)
+- Real-time progress tracking with SignalR
 - Post-import completion statistics showing success rates, timing, and summary
 - Responsive design for mobile/desktop
 - Professional authentication flow
 - Batch playlist processing with statistics
 - Mass delete all favorites functionality with strong safety confirmation
-- **NEW**: Filtered mass delete functionality with server-side search and optimization
+- Filtered mass delete functionality with server-side search and optimization
+- **Production deployment on Railway with automatic HTTPS**
+- **Cross-platform Docker containerization**
+- **Automatic deployments via GitHub integration**
 
-### 🔧 Known Issue: SignalR Connection
-**Problem**: "Failed to establish real-time connection" during import
-**Impact**: Import works but without real-time progress updates
-**Workaround**: Fallback connection logic implemented
-**Next Steps**: Debug WebSocket transport configuration
+### 📋 Testing
 
-### 📋 Quick Testing
+**Local Development:**
 1. Run: `cd QobuzWebApp/qobuz-web-frontend && npm run dev:full`
 2. Open: http://localhost:5173
 3. Login with Qobuz credentials
@@ -153,6 +186,10 @@ cd QobuzWebApp/qobuz-web-frontend && npm run build
 5. Select playlists and import to favorites
 6. Test mass delete: Click "Delete All" button (red button in top-right)
 7. Test filtered delete: Click "Filter & Delete" button (blue button in top-right)
+
+**Production Testing:**
+1. Visit: https://qobuzplaylisttofavorites-production.up.railway.app
+2. Same testing steps as local development
 
 ## Mass Delete All Favorites Feature
 
