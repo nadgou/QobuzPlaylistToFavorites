@@ -9,10 +9,11 @@ RUN npm run build
 # Build backend
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
 WORKDIR /app
-COPY QobuzWebApp/*.csproj ./
-RUN dotnet restore
-COPY QobuzWebApp/ ./
-RUN dotnet publish -c Release -o out
+COPY QobuzWebApp/*.csproj ./QobuzWebApp/
+COPY *.csproj ./
+RUN dotnet restore QobuzWebApp/QobuzWebApp.csproj
+COPY . ./
+RUN dotnet publish QobuzWebApp -c Release -o out
 
 # Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
