@@ -12,8 +12,9 @@ export class SignalRService {
 
     try {
       // Try simple connection without extra headers first
+      const hubUrl = import.meta.env.PROD ? '/hub/progress' : 'http://localhost:5152/hub/progress';
       this.connection = new HubConnectionBuilder()
-        .withUrl('http://localhost:5152/hub/progress')
+        .withUrl(hubUrl)
         .build();
           
       console.log('Attempting SignalR connection...');

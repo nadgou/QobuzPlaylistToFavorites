@@ -22,10 +22,11 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // Production: Allow Railway domain
-            policy.AllowAnyOrigin()
+            // Production: Allow any origin but with proper SignalR support
+            policy.SetIsOriginAllowed(origin => true)
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         }
     });
 });
