@@ -85,18 +85,19 @@ namespace QobuzPlaylistToFavorites
 
                 if (string.IsNullOrWhiteSpace(searchTerm))
                 {
-                    // Let's just get current favorites to show it's working
-                    Console.WriteLine("\nGetting your current favorites to verify the system works...");
-                    var currentFavorites = apiService.GetUserFavorites(userId, "tracks", 10, 0);
+                    // Let's analyze track properties and API capabilities
+                    Console.WriteLine("\nAnalyzing QobuzApiSharp capabilities...");
+                    AnalyzeApiCapabilities();
                     
-                    Console.WriteLine($"You currently have favorites. Sample tracks:");
+                    // Get current favorites to analyze track properties
+                    Console.WriteLine("\nGetting your current favorites to analyze track properties...");
+                    var currentFavorites = apiService.GetUserFavorites(userId, "tracks", 1, 0);
+                    
                     if (currentFavorites?.Tracks?.Items?.Any() == true)
                     {
-                        for (int i = 0; i < Math.Min(5, currentFavorites.Tracks.Items.Count); i++)
-                        {
-                            var track = currentFavorites.Tracks.Items[i];
-                            Console.WriteLine($"  - {track.Title} by {track.Performer?.Name}");
-                        }
+                        var track = currentFavorites.Tracks.Items[0];
+                        Console.WriteLine($"\nSample track: {track.Title} by {track.Performer?.Name}");
+                        AnalyzeTrackProperties(track);
                     }
                     else
                     {
@@ -449,6 +450,178 @@ namespace QobuzPlaylistToFavorites
 
             Console.WriteLine();
             return password;
+        }
+
+        static void AnalyzeApiCapabilities()
+        {
+            Console.WriteLine("=== QobuzApiSharp Method Analysis ===");
+            
+            try
+            {
+                var serviceType = typeof(QobuzApiService);
+                var methods = serviceType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
+                
+                Console.WriteLine($"Total public methods: {methods.Length}");
+                
+                // Group methods by category
+                var playlistMethods = methods.Where(m => m.Name.ToLower().Contains("playlist")).ToList();
+                var createMethods = methods.Where(m => m.Name.ToLower().Contains("create") || m.Name.ToLower().Contains("add")).ToList();
+                var searchMethods = methods.Where(m => m.Name.ToLower().Contains("search")).ToList();
+                var favoriteMethods = methods.Where(m => m.Name.ToLower().Contains("favorite")).ToList();
+                
+                Console.WriteLine("\n--- Playlist-related methods ---");
+                if (playlistMethods.Any())
+                {
+                    foreach (var method in playlistMethods)
+                    {
+                        var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+                        Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parameters})");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("  No playlist methods found");
+                }
+                
+                Console.WriteLine("\n--- Create/Add methods ---");
+                if (createMethods.Any())
+                {
+                    foreach (var method in createMethods)
+                    {
+                        var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+                        Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parameters})");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("  No create/add methods found");
+                }
+                
+                Console.WriteLine("\n--- Search methods ---");
+                if (searchMethods.Any())
+                {
+                    foreach (var method in searchMethods)
+                    {
+                        var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+                        Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parameters})");
+                    }
+                }
+                
+                Console.WriteLine("\n--- Favorite methods ---");
+                if (favoriteMethods.Any())
+                {
+                    foreach (var method in favoriteMethods)
+                    {
+                        var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+                        Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parameters})");
+                    }
+                }
+                
+                Console.WriteLine("\n--- All methods (alphabetical) ---");
+                foreach (var method in methods.OrderBy(m => m.Name))
+                {
+                    var parameters = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+                    Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parameters})");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error analyzing API capabilities: {ex.Message}");
+            }
+        }
+
+        static void AnalyzeTrackProperties(dynamic track)
+        {
+            Console.WriteLine("\n=== Track Properties Analysis ===");
+            
+            try
+            {
+                var trackType = track.GetType();
+                var properties = trackType.GetProperties();
+                
+                Console.WriteLine($"Track type: {trackType.Name}");
+                Console.WriteLine($"Total properties: {properties.Length}");
+                
+                Console.WriteLine("\n--- Track Properties ---");
+                foreach (var prop in properties.OrderBy(p => p.Name))
+                {
+                    try
+                    {
+                        var value = prop.GetValue(track);
+                        var displayValue = value?.ToString() ?? "null";
+                        
+                        // Truncate long values
+                        if (displayValue.Length > 50)
+                        {
+                            displayValue = displayValue.Substring(0, 47) + "...";
+                        }
+                        
+                        Console.WriteLine($"  {prop.Name} ({prop.PropertyType.Name}): {displayValue}");
+                        
+                        // If this is a complex object, show its properties too
+                        if (value != null && !prop.PropertyType.IsPrimitive && 
+                            prop.PropertyType != typeof(string) && 
+                            prop.PropertyType != typeof(decimal) && 
+                            prop.PropertyType != typeof(DateTime) &&
+                            prop.PropertyType != typeof(TimeSpan) &&
+                            !prop.PropertyType.IsEnum)
+                        {
+                            AnalyzeComplexProperty(prop.Name, value, 1);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"  {prop.Name}: Error accessing - {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error analyzing track properties: {ex.Message}");
+            }
+        }
+
+        static void AnalyzeComplexProperty(string propertyName, object value, int depth)
+        {
+            if (depth > 2 || value == null) return; // Prevent infinite recursion
+            
+            try
+            {
+                var indent = new string(' ', depth * 4);
+                var type = value.GetType();
+                var properties = type.GetProperties();
+                
+                Console.WriteLine($"{indent}└─ {propertyName} ({type.Name}) properties:");
+                
+                foreach (var prop in properties.Take(5)) // Limit to first 5 properties to avoid clutter
+                {
+                    try
+                    {
+                        var propValue = prop.GetValue(value);
+                        var displayValue = propValue?.ToString() ?? "null";
+                        
+                        if (displayValue.Length > 30)
+                        {
+                            displayValue = displayValue.Substring(0, 27) + "...";
+                        }
+                        
+                        Console.WriteLine($"{indent}   {prop.Name}: {displayValue}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"{indent}   {prop.Name}: Error - {ex.Message}");
+                    }
+                }
+                
+                if (properties.Length > 5)
+                {
+                    Console.WriteLine($"{indent}   ... and {properties.Length - 5} more properties");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error analyzing complex property {propertyName}: {ex.Message}");
+            }
         }
     }
 }
